@@ -48,6 +48,8 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
         sender.sendMessage("§a/psp edit player <内部名> exclusion add <プレイヤー名> §7除外プレイヤーを追加します")
         sender.sendMessage("§a/psp edit player <内部名> exclusion remove <プレイヤー名> §7除外プレイヤーを削除します")
         sender.sendMessage("§a/psp edit player <内部名> exclusion list §7除外プレイヤー一覧を表示します")
+        sender.sendMessage("§a/psp edit player <内部名> distance §7プレイヤーから離す距離を表示します")
+        sender.sendMessage("§a/psp edit player <内部名> distance <距離> §7プレイヤーから離す距離を設定します")
         sender.sendMessage("§a/psp edit location <内部名> delay §7テレポートの周期を表示します")
         sender.sendMessage("§a/psp edit location <内部名> delay <ミリ秒> §7テレポートの周期を設定します")
         sender.sendMessage("§a/psp edit location <内部名> location add §7立っているところを位置として追加します")
@@ -203,7 +205,8 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editPlayerExclusionList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("exclusion")).setNormalExecutor {
+    val editPlayerExclusionList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
+        .addArg(SCommandArg("list")).setNormalExecutor {
         it.sender.sendPrefixMsg(SStr("&a除外設定に含まれているプレイヤー一覧"))
         for (exclusion in PlayerSurveillancePlugin.playerData[it.args[2]]!!.exclusionPlayers){
             it.sender.sendPrefixMsg(SStr("&a${Bukkit.getOfflinePlayer(exclusion).name}"))
@@ -259,6 +262,28 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
                 it.sender.sendPrefixMsg(SStr("&a${player.name}を削除しました"))
             }
         }
+
+    @SCommandBody
+    val editPlayerDistanceInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("distance")).setNormalExecutor {
+        it.sender.sendPrefixMsg(SStr("&aプレイヤーとの距離"))
+        it.sender.sendPrefixMsg(SStr("&a${PlayerSurveillancePlugin.playerData[it.args[2]]!!.distance}"))
+    }
+
+    @SCommandBody
+    val editPlayerDistance = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("distance"))
+        .addArg(SCommandArg(SCommandArgType.DOUBLE).addAlias("距離")).setNormalExecutor {
+            if (PlayerSurveillancePlugin.isRunning){
+                it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
+                return@setNormalExecutor
+            }
+            val data = PlayerSurveillancePlugin.playerData[it.args[2]]!!
+            data.distance = it.args[4].toDouble()
+            if (editYml(data.file) { yml ->
+                    yml.set("distance",data.distance)
+                }){
+                it.sender.sendPrefixMsg(SStr("&a${data.distance}にしました"))
+            }
+    }
 
     @SCommandBody
     val editLocationDelayInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名")).addArg(SCommandArg("delay")).setNormalExecutor {
