@@ -1,0 +1,7 @@
+name: PlayerSurveillancePlugin
+version: '${version}'
+main: tororo1066.playersurveillanceplugin.PlayerSurveillancePlugin
+api-version: 1.17
+
+commands:
+  psp:
