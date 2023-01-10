@@ -28,11 +28,10 @@ class LocationTp(val data: LocationTpData): AbstractFunc() {
                         lock = false
                     }
                     while (lock){
+                        if (isInterrupted)return//確証なし
                         sleep(1)
                     }
                 }
-
-                p!!.gameMode = GameMode.SPECTATOR
 
                 Bukkit.getScheduler().runTask(PlayerSurveillancePlugin.plugin, Runnable {
                     p!!.teleport(it)

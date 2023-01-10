@@ -22,6 +22,7 @@ import tororo1066.tororopluginapi.sCommand.SCommandArgType
 import tororo1066.tororopluginapi.sInventory.SInventoryItem
 import tororo1066.tororopluginapi.utils.LocType
 import tororo1066.tororopluginapi.utils.toLocString
+import java.io.File
 import java.util.*
 import java.util.function.Consumer
 import kotlin.collections.ArrayList
@@ -58,6 +59,14 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
         sender.sendMessage("§b====================PlayerSurveillancePlugin==Author:tororo_1066")
     }
 
+    private fun getPlayerData(): HashMap<String, PlayerTpData> {
+        return PlayerSurveillancePlugin.playerData
+    }
+
+    private fun getLocationData(): HashMap<String, LocationTpData> {
+        return PlayerSurveillancePlugin.locationData
+    }
+
     init {
         setCommandNoFoundEvent { showHelp(it.sender) }
     }
@@ -75,7 +84,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     val showEditHelp2 = command().addArg(SCommandArg("edit")).addArg(SCommandArg("help")).setNormalExecutor { showEditHelp(it.sender) }
 
     @SCommandBody
-    val startPlayerTask = command().addArg(SCommandArg("task")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys)).setNormalExecutor {
+    val startPlayerTask = command().addArg(SCommandArg("task")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys)).setNormalExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
             return@setNormalExecutor
@@ -93,7 +102,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val startLocTask = command().addArg(SCommandArg("task")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys)).setNormalExecutor {
+    val startLocTask = command().addArg(SCommandArg("task")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys)).setNormalExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
             return@setNormalExecutor
@@ -158,6 +167,40 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
+    val removePlayerTask = command().addArg(SCommandArg("removeTask")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).setNormalExecutor {
+        if (!PlayerSurveillancePlugin.playerData.containsKey(it.args[2])){
+            it.sender.sendPrefixMsg(SStr("&cデータが存在しません！"))
+            return@setNormalExecutor
+        }
+        if (PlayerSurveillancePlugin.isRunning){
+            it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
+            return@setNormalExecutor
+        }
+        val data = PlayerSurveillancePlugin.playerData[it.args[2]]!!
+        File(PlayerSurveillancePlugin.plugin.dataFolder.path + "/${data.file}.yml").delete()
+        PlayerSurveillancePlugin.playerData.remove(it.args[2])
+        reloadSCommandBodies()
+        it.sender.sendPrefixMsg(SStr("&a作成しました"))
+    }
+
+    @SCommandBody
+    val removeLocationTask = command().addArg(SCommandArg("removeTask")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名")).setNormalExecutor {
+        if (!PlayerSurveillancePlugin.playerData.containsKey(it.args[2])){
+            it.sender.sendPrefixMsg(SStr("&cデータが存在しません！"))
+            return@setNormalExecutor
+        }
+        if (PlayerSurveillancePlugin.isRunning){
+            it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
+            return@setNormalExecutor
+        }
+        val data = PlayerSurveillancePlugin.playerData[it.args[2]]!!
+        File(PlayerSurveillancePlugin.plugin.dataFolder.path + "/${data.file}.yml").delete()
+        PlayerSurveillancePlugin.playerData.remove(it.args[2])
+        reloadSCommandBodies()
+        it.sender.sendPrefixMsg(SStr("&a作成しました"))
+    }
+
+    @SCommandBody
     val editCameraPlayerInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("camera")).setNormalExecutor {
         if (PlayerSurveillancePlugin.cameraPlayer == null){
             it.sender.sendPrefixMsg(SStr("&cカメラプレイヤーが存在しません！"))
@@ -182,14 +225,14 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editPlayerDelayInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("delay")).setNormalExecutor {
+    val editPlayerDelayInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("delay")).setNormalExecutor {
         val data = PlayerSurveillancePlugin.playerData[it.args[2]]!!
         it.sender.sendPrefixMsg(SStr("&a周期(1000=1秒)"))
         it.sender.sendPrefixMsg(SStr("&a${data.delay}"))
     }
 
     @SCommandBody
-    val editPlayerDelay = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("delay")).addArg(
+    val editPlayerDelay = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("delay")).addArg(
         SCommandArg(SCommandArgType.LONG).addAlias("周期(1000=1秒)")).setNormalExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -205,7 +248,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editPlayerExclusionList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
+    val editPlayerExclusionList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
         .addArg(SCommandArg("list")).setNormalExecutor {
         it.sender.sendPrefixMsg(SStr("&a除外設定に含まれているプレイヤー一覧"))
         for (exclusion in PlayerSurveillancePlugin.playerData[it.args[2]]!!.exclusionPlayers){
@@ -214,7 +257,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editPlayerExclusionAdd = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
+    val editPlayerExclusionAdd = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
         .addArg(SCommandArg("add")).addArg(SCommandArg().addAlias("プレイヤー")).setNormalExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -237,7 +280,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editPlayerExclusionRemove = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
+    val editPlayerExclusionRemove = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("exclusion"))
         .addArg(SCommandArg("remove")).addArg(SCommandArg().addAlias("プレイヤー(UUIDでもok)").addChangeableAllowString {PlayerSurveillancePlugin.playerData[it[2]]?.exclusionPlayers?.map { map->map.toString() }?: listOf()}).setNormalExecutor {
             if (PlayerSurveillancePlugin.isRunning){
                 it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -264,13 +307,13 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
         }
 
     @SCommandBody
-    val editPlayerDistanceInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("distance")).setNormalExecutor {
+    val editPlayerDistanceInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("distance")).setNormalExecutor {
         it.sender.sendPrefixMsg(SStr("&aプレイヤーとの距離"))
         it.sender.sendPrefixMsg(SStr("&a${PlayerSurveillancePlugin.playerData[it.args[2]]!!.distance}"))
     }
 
     @SCommandBody
-    val editPlayerDistance = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(PlayerSurveillancePlugin.playerData.keys).addAlias("内部名")).addArg(SCommandArg("distance"))
+    val editPlayerDistance = command().addArg(SCommandArg("edit")).addArg(SCommandArg("player")).addArg(SCommandArg(getPlayerData().keys).addAlias("内部名")).addArg(SCommandArg("distance"))
         .addArg(SCommandArg(SCommandArgType.DOUBLE).addAlias("距離")).setNormalExecutor {
             if (PlayerSurveillancePlugin.isRunning){
                 it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -286,14 +329,14 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editLocationDelayInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名")).addArg(SCommandArg("delay")).setNormalExecutor {
+    val editLocationDelayInfo = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名")).addArg(SCommandArg("delay")).setNormalExecutor {
         val data = PlayerSurveillancePlugin.locationData[it.args[2]]!!
         it.sender.sendPrefixMsg(SStr("&a周期(1000=1秒)"))
         it.sender.sendPrefixMsg(SStr("&a${data.delay}"))
     }
 
     @SCommandBody
-    val editLocationDelay = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名")).addArg(SCommandArg("delay")).addArg(
+    val editLocationDelay = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名")).addArg(SCommandArg("delay")).addArg(
         SCommandArg(SCommandArgType.LONG).addAlias("周期(1000=1秒)")).setNormalExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -309,7 +352,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editLocationList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名"))
+    val editLocationList = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名"))
         .addArg(SCommandArg("location")).addArg(SCommandArg("list")).setPlayerExecutor {
             val data = PlayerSurveillancePlugin.locationData[it.args[2]]!!
             it.sender.sendPrefixMsg(SStr("&aLoc一覧(クリックでテレポート)"))
@@ -319,7 +362,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
         }
 
     @SCommandBody
-    val editLocationAdd = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名"))
+    val editLocationAdd = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名"))
         .addArg(SCommandArg("location")).addArg(SCommandArg("add")).setPlayerExecutor {
         if (PlayerSurveillancePlugin.isRunning){
             it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))
@@ -337,7 +380,7 @@ class PSPCommand: SCommand("psp",PlayerSurveillancePlugin.prefix.toString(),"psp
     }
 
     @SCommandBody
-    val editLocationRemove = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(PlayerSurveillancePlugin.locationData.keys).addAlias("内部名"))
+    val editLocationRemove = command().addArg(SCommandArg("edit")).addArg(SCommandArg("location")).addArg(SCommandArg(getLocationData().keys).addAlias("内部名"))
         .addArg(SCommandArg("location")).addArg(SCommandArg("remove")).setPlayerExecutor {
             if (PlayerSurveillancePlugin.isRunning){
                 it.sender.sendPrefixMsg(SStr("&cタスクを実行中です！ /psp task stopで終了してください"))

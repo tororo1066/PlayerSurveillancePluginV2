@@ -25,18 +25,17 @@ class PlayerTp(val data: PlayerTpData): AbstractFunc() {
                     lock = false
                 }
                 while (lock){
+                    if (isInterrupted)return//確証なし
                     sleep(1)
                 }
             }
 
-            val players = Bukkit.getOnlinePlayers().filter { data.exclusionPlayers.contains(it.uniqueId) && PlayerSurveillancePlugin.cameraPlayer != it.uniqueId }
+            val players = Bukkit.getOnlinePlayers().filter { !data.exclusionPlayers.contains(it.uniqueId) && PlayerSurveillancePlugin.cameraPlayer != it.uniqueId }
             val singlePlayer = players.randomOrNull()
             if (singlePlayer == null){
                 sleep(data.delay)
                 continue
             }
-
-            p!!.gameMode = GameMode.SPECTATOR
 
             Bukkit.getScheduler().runTask(PlayerSurveillancePlugin.plugin, Runnable {
                 p!!.teleport(singlePlayer.location.multiply(-data.distance))
