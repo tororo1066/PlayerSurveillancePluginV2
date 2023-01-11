@@ -18,7 +18,7 @@ class PlayerTpData {
             val data = PlayerTpData()
             data.file = file.path.replace(PlayerSurveillancePlugin.plugin.dataFolder.path, "").replace("\\","/").dropLast(4)
             data.exclusionPlayers.addAll(yml.getStringList("exclusionPlayers").map { UUID.fromString(it) })
-            data.delay = yml.getLong("delay")
+            data.delay = yml.getLong("delay",10000L)
             data.distance = yml.getDouble("distance")
             return data
         }

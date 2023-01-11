@@ -7,27 +7,31 @@ import tororo1066.playersurveillanceplugin.PlayerSurveillancePlugin
 import tororo1066.playersurveillanceplugin.data.PlayerTpData
 import tororo1066.tororopluginapi.utils.toPlayer
 
-class PlayerTp(val data: PlayerTpData): AbstractFunc() {
+class PlayerTp(private val data: PlayerTpData): AbstractFunc() {
 
-    var lock = false
+    private var lock = false
 
     override fun run() {
         if (PlayerSurveillancePlugin.cameraPlayer == null)return
         PlayerSurveillancePlugin.isRunning = true
+
+        sEvent.biRegister(PlayerJoinEvent::class.java){ e, unit ->
+            if (e.player.uniqueId != PlayerSurveillancePlugin.cameraPlayer)return@biRegister
+            lock = false
+        }
+
         while (true){
             var p = PlayerSurveillancePlugin.cameraPlayer?.toPlayer()
             if (p == null){
                 lock = true
-                sEvent.biRegister(PlayerJoinEvent::class.java){ e, unit ->
-                    if (e.player.uniqueId != PlayerSurveillancePlugin.cameraPlayer)return@biRegister
-                    p = e.player
-                    unit.unregister()
-                    lock = false
-                }
                 while (lock){
-                    if (isInterrupted)return//確証なし
+                    if (isInterrupted){
+                        sEvent.unregisterAll()
+                        return
+                    }
                     sleep(1)
                 }
+                p = PlayerSurveillancePlugin.cameraPlayer?.toPlayer()!!
             }
 
             val players = Bukkit.getOnlinePlayers().filter { !data.exclusionPlayers.contains(it.uniqueId) && PlayerSurveillancePlugin.cameraPlayer != it.uniqueId }
@@ -38,7 +42,7 @@ class PlayerTp(val data: PlayerTpData): AbstractFunc() {
             }
 
             Bukkit.getScheduler().runTask(PlayerSurveillancePlugin.plugin, Runnable {
-                p!!.teleport(singlePlayer.location.multiply(-data.distance))
+                p.teleport(singlePlayer.location.setDirection(singlePlayer.location.direction.normalize().multiply(-data.distance)))
             })
 
             sleep(data.delay)

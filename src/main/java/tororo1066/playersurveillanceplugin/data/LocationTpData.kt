@@ -17,7 +17,7 @@ class LocationTpData {
             val data = LocationTpData()
             data.file = file.path.replace(PlayerSurveillancePlugin.plugin.dataFolder.path, "").replace("\\","/").dropLast(4)
             (yml.getList("locations") as? List<Location>)?.let { data.locations.addAll(it) }
-            data.delay = yml.getLong("delay")
+            data.delay = yml.getLong("delay",10000L)
             return data
         }
     }

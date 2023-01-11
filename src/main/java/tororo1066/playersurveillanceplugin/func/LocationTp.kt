@@ -9,32 +9,37 @@ import tororo1066.playersurveillanceplugin.data.LocationTpData
 import tororo1066.tororopluginapi.sEvent.SEvent
 import tororo1066.tororopluginapi.utils.toPlayer
 
-class LocationTp(val data: LocationTpData): AbstractFunc() {
+class LocationTp(private val data: LocationTpData): AbstractFunc() {
 
-    var lock = false
+    private var lock = false
 
     override fun run() {
         if (PlayerSurveillancePlugin.cameraPlayer == null)return
         PlayerSurveillancePlugin.isRunning = true
+
+        sEvent.register(PlayerJoinEvent::class.java){ e ->
+            if (e.player.uniqueId != PlayerSurveillancePlugin.cameraPlayer)return@register
+            lock = false
+        }
+
         while (true){
             data.locations.forEach {
                 var p = PlayerSurveillancePlugin.cameraPlayer?.toPlayer()
                 if (p == null){
                     lock = true
-                    sEvent.biRegister(PlayerJoinEvent::class.java){ e, unit ->
-                        if (e.player.uniqueId != PlayerSurveillancePlugin.cameraPlayer)return@biRegister
-                        p = e.player
-                        unit.unregister()
-                        lock = false
-                    }
+
                     while (lock){
-                        if (isInterrupted)return//確証なし
+                        if (isInterrupted){
+                            sEvent.unregisterAll()
+                            return
+                        }
                         sleep(1)
                     }
+                    p = PlayerSurveillancePlugin.cameraPlayer?.toPlayer()!!
                 }
 
                 Bukkit.getScheduler().runTask(PlayerSurveillancePlugin.plugin, Runnable {
-                    p!!.teleport(it)
+                    p.teleport(it)
                 })
                 sleep(data.delay)
             }
